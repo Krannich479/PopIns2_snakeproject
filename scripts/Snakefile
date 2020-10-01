@@ -1,1 +1,32 @@
+configfile: "scripts/snake_config.yaml"
 
+POPINS2_BIN=config["POPINS2_BIN"]
+WORK_DIR=config["WORK_DIR"]
+SAMPLES=config["SAMPLES"]
+
+
+
+rule all:
+    input:
+        expand("{p}/unmapped/{s}/{f}", p=WORK_DIR, s=SAMPLES, f=["single.fastq","paired.1.fastq","paired.2.fastq","non_ref.bam","POPINS_SAMPLE_INFO","assembly_final.contigs.fa"])
+
+
+rule popins2_assemble:
+    output:
+        WORK_DIR + "/unmapped/{sample}/single.fastq",
+        WORK_DIR + "/unmapped/{sample}/paired.1.fastq",
+        WORK_DIR + "/unmapped/{sample}/paired.2.fastq",
+        WORK_DIR + "/unmapped/{sample}/non_ref.bam",
+        WORK_DIR + "/unmapped/{sample}/POPINS_SAMPLE_INFO",
+        WORK_DIR + "/unmapped/{sample}/assembly_final.contigs.fa"
+    threads:
+        16
+    params:
+        memory="2G"
+    shell:
+        "{POPINS2_BIN} assemble "
+        "   --prefix {WORK_DIR}/unmapped "
+        "   --sample {wildcards.sample} "
+        "   --threads {threads} "
+        "   --memory {params.memory} "
+        "   {WORK_DIR}/unmapped/{wildcards.sample}/{wildcards.sample}.bam "
