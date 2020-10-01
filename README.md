@@ -6,7 +6,7 @@ Download this PopIns2 snakeproject via
 git clone https://github.com/Krannich479/PopIns2_snakeproject.git
 ```
 
-Adjust the variables in `scripts/snake_config.yaml` to your system environment and create some, for this particular snakemake pipeline, required subfolders via
+The top folder _PopIns2_snakeproject_ will be referred as WORK_DIR. This guide assumes that every instruction will be executed from within the WORK_DIR unless stated otherwise. Adjust the variables in `scripts/snake_config.yaml` to your system environment and create some, for this particular snakemake pipeline, required subfolders via
 
 ```
 mkdir unmapped
