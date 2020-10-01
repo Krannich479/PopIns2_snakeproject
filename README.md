@@ -28,9 +28,9 @@ $ tree .
     │   ├── sample_01.bam
     │   └── sample_01.bam.bai
     ├── sample_02
-    │   ├── sample_01.bam
-    │   └── sample_01.bam.bai
+    │   ├── sample_02.bam
+    │   └── sample_02.bam.bai
     └── sample_03
-        ├── sample_01.bam
-        └── sample_01.bam.bai
+        ├── sample_03.bam
+        └── sample_03.bam.bai
 ```
