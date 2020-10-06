@@ -2,6 +2,7 @@ configfile: "scripts/snake_config.yaml"
 
 POPINS2_BIN=config["POPINS2_BIN"]
 WORK_DIR=config["WORK_DIR"]
+REFERENCE=config["REFERENCE"]
 SAMPLES=config["SAMPLES"]
 
 
@@ -12,8 +13,15 @@ rule all:
         WORK_DIR + "/results/ccdbg.contigs.fasta",
         WORK_DIR + "/results/ccdbg.gfa",
         WORK_DIR + "/results/ccdbg.bfg_colors",
-        WORK_DIR + "/results/popins2.merge.log"
-
+        WORK_DIR + "/results/popins2.merge.log",
+        expand("{p}/unmapped/{s}/non_ref_new.bam", p=WORK_DIR, s=SAMPLES),
+        WORK_DIR + "/results/locations.txt",
+        WORK_DIR + "/results/insertions.vcf",
+        WORK_DIR + "/results/groups.txt",
+        expand("{p}/unmapped/{s}/locations_unplaced.txt", p=WORK_DIR, s=SAMPLES),
+        expand("{p}/unmapped/{s}/locations_placed.txt", p=WORK_DIR, s=SAMPLES),
+        WORK_DIR + "/results/place-finish.done",
+        WORK_DIR + "/results/genotype-finish.done"
 
 
 rule popins2_assemble:
@@ -41,18 +49,122 @@ rule popins2_merge_contigs:
     input:
         expand("{p}/unmapped/{s}/assembly_final.contigs.fa", p=WORK_DIR, s=SAMPLES)
     output:
-        WORK_DIR + "/results/ccdbg.contigs.fasta",
-        WORK_DIR + "/results/ccdbg.gfa",
-        WORK_DIR + "/results/ccdbg.bfg_colors",
-        log=WORK_DIR + "/results/popins2.merge.log"
+        supercontigs =WORK_DIR + "/results/ccdbg.contigs.fasta",
+        gfa          =WORK_DIR + "/results/ccdbg.gfa",
+        colors       =WORK_DIR + "/results/ccdbg.bfg_colors",
+        log          =WORK_DIR + "/results/popins2.merge.log"
     threads:
         16
+    params:
+        k=63
     shell:
         "{POPINS2_BIN} merge "
-        "   -k 63 "
+        "   -k {params.k} "
         "   -t {threads} "
         "   -r {WORK_DIR}/unmapped "
         "   -p {WORK_DIR}/results/ccdbg "
         "   -di "
         "   &> {output.log} 2>&1 "
+
+
+rule popins2_contigmap:
+    input:
+#        se  =WORK_DIR + "/unmapped/{sample}/single.fastq",
+#        pe1 =WORK_DIR + "/unmapped/{sample}/paired.1.fastq",
+#        pe2 =WORK_DIR + "/unmapped/{sample}/paired.2.fastq",
+#        non =WORK_DIR + "/unmapped/{sample}/non_ref.bam"
+        rules.popins2_merge_contigs.output
+    threads:
+        16
+    params:
+        memory="2G"
+    output:
+        WORK_DIR + "/unmapped/{sample}/non_ref_new.bam",
+        WORK_DIR + "/unmapped/{sample}/non_ref_new.bam.bai",
+        WORK_DIR + "/unmapped/{sample}/locations.txt"
+    shell:
+        "{POPINS2_BIN} contigmap "
+        "   --prefix {WORK_DIR}/unmapped "
+        "   --contigs {rules.popins2_merge_contigs.output.supercontigs} "
+        "   --reference {REFERENCE} "
+        "   --threads {threads} "
+        "   --memory {params.memory} "
+        "   {wildcards.sample} "
+        "   &> {WORK_DIR}/unmapped/{wildcards.sample}/popins2_contigmap.log 2>&1 "
+
+
+rule popins2_place_refalign:
+    input:
+        expand(WORK_DIR + "/unmapped/{s}/non_ref_new.bam", s=SAMPLES),
+        expand(WORK_DIR + "/unmapped/{s}/non_ref_new.bam.bai", s=SAMPLES),
+        expand(WORK_DIR + "/unmapped/{s}/locations.txt", s=SAMPLES)
+    output:
+        loc=WORK_DIR + "/results/locations.txt",
+        vcf=WORK_DIR + "/results/insertions.vcf",
+        grp=WORK_DIR + "/results/groups.txt",
+        unp=expand(WORK_DIR + "/unmapped/{s}/locations_unplaced.txt", s=SAMPLES)
+    params:
+        readlen=150
+    shell:
+        "{POPINS2_BIN} place-refalign "
+        "   --prefix {WORK_DIR}/unmapped "
+        "   --locations {WORK_DIR}/results/locations.txt "
+        "   --insertions {WORK_DIR}/results/insertions.vcf "
+        "   --groups {WORK_DIR}/results/groups.txt "
+        "   --contigs {rules.popins2_merge_contigs.output.supercontigs} "
+        "   --reference {REFERENCE} "
+        "   --readLength {params.readlen} "
+
+
+rule popins2_place_splitalign:
+    input:
+        loc =rules.popins2_place_refalign.output.loc,
+        vcf =rules.popins2_place_refalign.output.vcf,
+        grp =rules.popins2_place_refalign.output.grp,
+        unp =WORK_DIR + "/unmapped/{sample}/locations_unplaced.txt"
+    output:
+        WORK_DIR + "/unmapped/{sample}/locations_placed.txt"
+    params:
+        readlen=150
+    shell:
+        "{POPINS2_BIN} place-splitalign "
+        "   --prefix {WORK_DIR}/unmapped "
+        "   --contigs {rules.popins2_merge_contigs.output.supercontigs} "
+        "   --reference {REFERENCE} "
+        "   --readLength {params.readlen} "
+        "   {wildcards.sample} "
+
+
+rule popins2_place_finish:
+    input:
+        expand(WORK_DIR + "/unmapped/{s}/locations_placed.txt", s=SAMPLES)
+    output:
+        touch(WORK_DIR + "/results/place-finish.done")
+    shell:
+        "{POPINS2_BIN} place-finish "
+        "   --prefix {WORK_DIR}/unmapped "
+        "   --insertions {rules.popins2_place_refalign.output.vcf}"
+        "   --reference {REFERENCE} "
+        "   &> {WORK_DIR}/results/popins2_place_finish.log 2>&1 "
+
+
+rule popins2_genotype:
+    input:
+        WORK_DIR + "/results/place-finish.done"
+    output:
+        WORK_DIR + "/unmapped/{sample}/insertions.vcf"
+    shell:
+        "{POPINS2_BIN} genotype "
+        "   --prefix {WORK_DIR}/unmapped "
+        "   --insertions {rules.popins2_place_refalign.output.vcf} "
+        "   --contigs {rules.popins2_merge_contigs.output.supercontigs} "
+        "   --reference {REFERENCE} "
+        "   {wildcards.sample} "
+
+
+rule popins2_check_genotype_status:
+    input:
+        expand(WORK_DIR + "/unmapped/{s}/insertions.vcf", s=SAMPLES)
+    output:
+        touch(WORK_DIR + "/results/genotype-finish.done")
 
