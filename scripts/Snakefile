@@ -73,6 +73,7 @@ rule popins2_contigmap:
 #        pe1 =WORK_DIR + "/unmapped/{sample}/paired.1.fastq",
 #        pe2 =WORK_DIR + "/unmapped/{sample}/paired.2.fastq",
 #        non =WORK_DIR + "/unmapped/{sample}/non_ref.bam"
+        rules.popins2_assemble.output,
         rules.popins2_merge_contigs.output
     threads:
         16
@@ -118,10 +119,11 @@ rule popins2_place_refalign:
 
 rule popins2_place_splitalign:
     input:
-        loc =rules.popins2_place_refalign.output.loc,
-        vcf =rules.popins2_place_refalign.output.vcf,
-        grp =rules.popins2_place_refalign.output.grp,
-        unp =WORK_DIR + "/unmapped/{sample}/locations_unplaced.txt"
+#        loc =rules.popins2_place_refalign.output.loc,
+#        vcf =rules.popins2_place_refalign.output.vcf,
+#        grp =rules.popins2_place_refalign.output.grp,
+#        unp =WORK_DIR + "/unmapped/{sample}/locations_unplaced.txt"
+        WORK_DIR + "/unmapped/{sample}/locations_unplaced.txt"
     output:
         WORK_DIR + "/unmapped/{sample}/locations_placed.txt"
     params:
