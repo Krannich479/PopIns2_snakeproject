@@ -1,5 +1,11 @@
 # PopIns2_snakeproject
 
+This github project contains a generic [snakemake](https://snakemake.readthedocs.io/en/stable/) pipeline for [PopIns2](https://github.com/kehrlab/PopIns2). It is supposed to facilitate your PopIns2 run and provides examples for a streamlined workflow. Users are encouraged to freely use and modify the code.
+
+---
+
+### Setup
+
 Download this PopIns2 snakeproject via
 
 ```
@@ -34,3 +40,15 @@ $ tree .
         ├── sample_03.bam
         └── sample_03.bam.bai
 ```
+
+Note that in the default setup of this pipeline the sample subfolders `unmapped/<sample_##>` have the same name as the mapping files `unmapped/<sample_##>/<sample_##>.bam`. 
+
+- Explain snake_config
+
+--- 
+
+### Workflow overview
+
+<img src="https://github.com/Krannich479/PopIns2_snakeproject/blob/master/dag.svg" width="700">
+
+The DAG above displays the workflow using three samples (HG00448, HG00449, HG00450). Each module, except for the genotype module, directly reports its output to the _all rule_ and provides the input for the next successive module of PopIns2. 
