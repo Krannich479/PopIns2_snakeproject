@@ -12,7 +12,7 @@ Download this PopIns2 snakeproject via
 git clone https://github.com/Krannich479/PopIns2_snakeproject.git
 ```
 
-The top folder _PopIns2_snakeproject_ will be referred as WORK_DIR. This guide assumes that every instruction will be executed from within the WORK_DIR unless stated otherwise. Adjust the variables in `scripts/snake_config.yaml` to your system environment and create some, for this particular snakemake pipeline, required subfolders via
+The top folder _PopIns2_snakeproject_ will be referred as WORK_DIR. This guide assumes that every instruction will be executed from within the WORK_DIR unless stated otherwise. Adjust the variables in `scripts/snake_config.yaml` (see bottom of this section for more details) to your system environment and create some, for this particular snakemake pipeline, required subfolders via
 
 ```
 mkdir unmapped
@@ -43,7 +43,11 @@ $ tree .
 
 Note that in the default setup of this pipeline the sample subfolders `unmapped/<sample_##>` have the same name as the mapping files `unmapped/<sample_##>/<sample_##>.bam`. 
 
-- Explain snake_config
+The variables in the snake_config.yaml have to adjusted to your system/environment, i.e. for the dafault setup of this snakemake project the
+- `POPINS2_BIN` variable must point to the _popins2_ binary
+- `REFERENCE` variable must point to the reference file the samples got mapped to
+- `WORK_DIR` variable must point to the _PopIns2_snakeproject_ folder
+- `SAMPLES` variable must contain a list of sample names, here, the names of the subfolders within _{WORK_DIR}/unmapped_. If your BAM file names differ from the subfolder names you have to adjust the BAM_FILE positional argument of the [popins2 assemble call](https://github.com/Krannich479/PopIns2_snakeproject/blob/44002a4387f3072002ada7c387bc0f6e11fc9349/scripts/Snakefile#L45)
 
 --- 
 
