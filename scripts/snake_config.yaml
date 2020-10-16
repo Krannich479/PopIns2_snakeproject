@@ -1,0 +1,11 @@
+POPINS2_BIN:
+   /path/to/your/PopIns2/popins2
+REFERENCE:
+   /path/to/your/reference.fa
+WORK_DIR:
+   /path/to/your/workdir
+
+SAMPLES:
+   - sample_01
+   - sample_02
+   - sample_03
