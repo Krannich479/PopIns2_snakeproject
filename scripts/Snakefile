@@ -10,9 +10,9 @@ SAMPLES=config["SAMPLES"]
 rule all:
     input:
         expand("{p}/unmapped/{s}/{f}", p=WORK_DIR, s=SAMPLES, f=["single.fastq","paired.1.fastq","paired.2.fastq","non_ref.bam","POPINS_SAMPLE_INFO","assembly_final.contigs.fa"]),
-        WORK_DIR + "/results/ccdbg.contigs.fasta",
-        WORK_DIR + "/results/ccdbg.gfa",
-        WORK_DIR + "/results/ccdbg.bfg_colors",
+        WORK_DIR + "/results/supercontigs.fa",
+        WORK_DIR + "/results/supercontigs.gfa",
+        WORK_DIR + "/results/supercontigs.bfg_colors",
         WORK_DIR + "/results/popins2.merge.log",
         expand("{p}/unmapped/{s}/non_ref_new.bam", p=WORK_DIR, s=SAMPLES),
         WORK_DIR + "/results/locations.txt",
@@ -49,9 +49,9 @@ rule popins2_merge_contigs:
     input:
         expand("{p}/unmapped/{s}/assembly_final.contigs.fa", p=WORK_DIR, s=SAMPLES)
     output:
-        supercontigs =WORK_DIR + "/results/ccdbg.contigs.fasta",
-        gfa          =WORK_DIR + "/results/ccdbg.gfa",
-        colors       =WORK_DIR + "/results/ccdbg.bfg_colors",
+        supercontigs =WORK_DIR + "/results/supercontigs.fa",
+        gfa          =WORK_DIR + "/results/supercontigs.gfa",
+        colors       =WORK_DIR + "/results/supercontigs.bfg_colors",
         log          =WORK_DIR + "/results/popins2.merge.log"
     threads:
         16
@@ -62,7 +62,7 @@ rule popins2_merge_contigs:
         "   -k {params.k} "
         "   -t {threads} "
         "   -r {WORK_DIR}/unmapped "
-        "   -p {WORK_DIR}/results/ccdbg "
+        "   -p {WORK_DIR}/results/supercontigs "
         "   -di "
         "   &> {output.log} 2>&1 "
 
